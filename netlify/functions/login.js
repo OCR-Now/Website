@@ -1,4 +1,4 @@
-import { getDb, getAdminRole } from './db.js'
+import { sql, getAdminRole } from './db.js'
 import { json, error, setCookie } from './auth-helper.js'
 import { createHash } from 'crypto'
 
@@ -17,8 +17,6 @@ export const handler = async (event) => {
   const { email, password } = body
   if (!email || !password) return error('Email and password are required')
 
-  const sql = getDb()
-
   try {
     const users = await sql`
       SELECT id, email, name, password_hash, role, username, is_banned
@@ -30,7 +28,6 @@ export const handler = async (event) => {
     if (!verifyPassword(password, user.password_hash)) return error('Invalid email or password', 401)
     if (user.is_banned) return error('This account has been suspended', 403)
 
-    // Auto-promote admin email every login — can never be downgraded accidentally
     const adminRole = getAdminRole(email)
     if (adminRole && user.role !== 'admin') {
       await sql`UPDATE users SET role = 'admin' WHERE id = ${user.id}`
@@ -44,14 +41,11 @@ export const handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Set-Cookie': setCookie(sessionId)
-      },
+      headers: { 'Content-Type': 'application/json', 'Set-Cookie': setCookie(sessionId) },
       body: JSON.stringify({ user: { id: user.id, email: user.email, name: user.name, role: user.role, username: user.username } })
     }
   } catch (e) {
     console.error('Login error:', e)
-    return error('Login failed', 500)
+    return error('Login failed: ' + e.message, 500)
   }
 }

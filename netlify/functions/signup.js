@@ -1,4 +1,4 @@
-import { getDb, getAdminRole } from './db.js'
+import { sql, getAdminRole } from './db.js'
 import { json, error, setCookie } from './auth-helper.js'
 import { createHash, randomBytes } from 'crypto'
 
@@ -17,8 +17,6 @@ export const handler = async (event) => {
   const { email, password, name } = body
   if (!email || !password || !name) return error('Email, password and name are required')
   if (password.length < 8) return error('Password must be at least 8 characters')
-
-  const sql = getDb()
 
   try {
     const existing = await sql`SELECT id FROM users WHERE email = ${email.toLowerCase()}`
@@ -43,14 +41,11 @@ export const handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Set-Cookie': setCookie(sessionId)
-      },
+      headers: { 'Content-Type': 'application/json', 'Set-Cookie': setCookie(sessionId) },
       body: JSON.stringify({ user: { id: user.id, email: user.email, name: user.name, role: user.role, username: user.username } })
     }
   } catch (e) {
     console.error('Signup error:', e)
-    return error('Failed to create account', 500)
+    return error('Failed to create account: ' + e.message, 500)
   }
 }

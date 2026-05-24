@@ -1,11 +1,35 @@
-import { neon } from '@neondatabase/serverless'
+import pg from 'pg'
+
+const { Pool } = pg
+
+let pool = null
 
 export function getDb() {
-  const sql = neon(process.env.DATABASE_URL)
-  return sql
+  if (!pool) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 1
+    })
+  }
+  return pool
 }
 
-// Auto-promote admin email on login/signup
+export async function sql(strings, ...values) {
+  const db = getDb()
+  let text = ''
+  const params = []
+  strings.forEach((str, i) => {
+    text += str
+    if (i < values.length) {
+      params.push(values[i])
+      text += `$${params.length}`
+    }
+  })
+  const result = await db.query(text, params)
+  return result.rows
+}
+
 export const ADMIN_EMAIL = 'divinxxii@gmail.com'
 
 export function getAdminRole(email) {
