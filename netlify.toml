@@ -1,15 +1,55 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
-[dev]
-  command = "npm run dev"
-  targetPort = 5173
-  port = 8888
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["netlify/functions/**"]
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  from = "/api/posts"
+  to = "/.netlify/functions/posts"
+  status = 200
+
+[[redirects]]
+  from = "/api/post/*"
+  to = "/.netlify/functions/post"
+  status = 200
+
+[[redirects]]
+  from = "/api/signup"
+  to = "/.netlify/functions/signup"
+  status = 200
+
+[[redirects]]
+  from = "/api/login"
+  to = "/.netlify/functions/login"
+  status = 200
+
+[[redirects]]
+  from = "/api/logout"
+  to = "/.netlify/functions/logout"
+  status = 200
+
+[[redirects]]
+  from = "/api/me"
+  to = "/.netlify/functions/me"
+  status = 200
+
+[[redirects]]
+  from = "/api/vote"
+  to = "/.netlify/functions/vote"
+  status = 200
+
+[[redirects]]
+  from = "/api/profile/*"
+  to = "/.netlify/functions/profile"
+  status = 200
+
+[[redirects]]
+  from = "/api/mod/*"
+  to = "/.netlify/functions/mod"
   status = 200
 
 [[redirects]]
